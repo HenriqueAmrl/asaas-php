@@ -137,8 +137,17 @@ final class HttpClient
         $body = (string) $response->getBody();
 
         if ($status >= 200 && $status < 300) {
-            /** @var array<string, mixed> $data */
-            $data = json_decode($body, associative: true, flags: JSON_THROW_ON_ERROR);
+            // 204 No Content and similar return an empty body - treat as empty array
+            if ($body === '') {
+                return [];
+            }
+
+            try {
+                /** @var array<string, mixed> $data */
+                $data = json_decode($body, associative: true, flags: JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                throw new NetworkException('Invalid JSON in response body: ' . $e->getMessage(), 0, $e);
+            }
 
             return $data;
         }
@@ -148,8 +157,14 @@ final class HttpClient
 
     private function mapHttpError(int $status, string $body): AsaasException
     {
+        try {
+            $decoded = json_decode($body, associative: true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            $decoded = null;
+        }
+
         /** @var array{errors?: array<int, array{code: string, description: string}>} $data */
-        $data = json_decode($body, associative: true, flags: JSON_THROW_ON_ERROR);
+        $data = is_array($decoded) ? $decoded : [];
         $errors = $data['errors'] ?? [];
         $firstMessage = $errors[0]['description'] ?? 'Unknown error';
 
