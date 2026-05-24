@@ -32,7 +32,7 @@ final class AsaasClientTest extends TestCase
     }
 
     #[Test]
-    public function accepts_injected_psr18_client_at_construction(): void
+    public function http_client_uses_injected_psr18_client_for_requests(): void
     {
         $fake = FakeHttpClient::withJsonResponse(200, ['foo' => 'bar']);
         $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);

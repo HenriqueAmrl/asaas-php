@@ -43,12 +43,8 @@ final class CustomerResourceTest extends TestCase
     }
 
     #[Test]
-    public function create_passes_request_body_to_http_client(): void
+    public function create_with_optional_fields_returns_typed_customer_dto(): void
     {
-        // Verify no exception is thrown and the returned DTO matches the response.
-        // FakeHttpClient does not expose request inspection in this plan - this test
-        // validates that the request body flows through without error and the
-        // response is correctly parsed.
         $fake = FakeHttpClient::withJsonResponse(200, [
             'id' => 'cus_456',
             'name' => 'Joao Santos',

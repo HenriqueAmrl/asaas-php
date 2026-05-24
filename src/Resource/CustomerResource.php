@@ -11,6 +11,7 @@ final class CustomerResource extends AbstractResource
 {
     /**
      * @param array<string, mixed> $data
+     * @see https://docs.asaas.com/reference/criar-novo-cliente
      */
     public function create(array $data): Customer
     {
@@ -19,6 +20,9 @@ final class CustomerResource extends AbstractResource
         return Customer::fromArray($response);
     }
 
+    /**
+     * @see https://docs.asaas.com/reference/retrieve-a-single-customer
+     */
     public function find(string $id): Customer
     {
         $response = $this->httpClient->get('/customers/' . $id);
@@ -27,7 +31,10 @@ final class CustomerResource extends AbstractResource
     }
 
     /**
+     * Asaas uses POST (not PUT) for customer updates.
+     *
      * @param array<string, mixed> $data
+     * @see https://docs.asaas.com/reference/atualizar-cliente
      */
     public function update(string $id, array $data): Customer
     {
@@ -36,6 +43,9 @@ final class CustomerResource extends AbstractResource
         return Customer::fromArray($response);
     }
 
+    /**
+     * @see https://docs.asaas.com/reference/remover-cliente
+     */
     public function delete(string $id): void
     {
         $this->httpClient->delete('/customers/' . $id);
@@ -44,10 +54,11 @@ final class CustomerResource extends AbstractResource
     /**
      * @param array<string, string|int|bool> $filters
      * @return PageResult<Customer>
+     * @see https://docs.asaas.com/reference/listar-clientes
      */
     public function list(array $filters = [], int $offset = 0, int $limit = 10): PageResult
     {
-        $params = array_filter(array_merge($filters, ['offset' => $offset, 'limit' => $limit]));
+        $params = array_merge($filters, ['offset' => $offset, 'limit' => $limit]);
         $response = $this->httpClient->get('/customers?' . http_build_query($params));
 
         /** @var array<int, array<string, mixed>> $rawItems */
