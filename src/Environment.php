@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HenriqueAmrl\AsaasPhp\Config;
+namespace HenriqueAmrl\AsaasPhp;
 
 enum Environment: string
 {

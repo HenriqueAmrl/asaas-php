@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace HenriqueAmrl\AsaasPhp\Tests\Unit\Config;
+namespace HenriqueAmrl\AsaasPhp\Tests\Unit;
 
-use HenriqueAmrl\AsaasPhp\Config\Environment;
+use HenriqueAmrl\AsaasPhp\Environment;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

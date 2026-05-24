@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace HenriqueAmrl\AsaasPhp\Tests\Unit;
 
 use HenriqueAmrl\AsaasPhp\AsaasClient;
-use HenriqueAmrl\AsaasPhp\Config\Environment;
+use HenriqueAmrl\AsaasPhp\Environment;
 use HenriqueAmrl\AsaasPhp\Http\HttpClient;
 use HenriqueAmrl\AsaasPhp\Resource\AbstractResource;
 use HenriqueAmrl\AsaasPhp\Tests\Unit\Support\FakeHttpClient;

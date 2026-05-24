@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace HenriqueAmrl\AsaasPhp;
 
-use HenriqueAmrl\AsaasPhp\Config\Environment;
+use HenriqueAmrl\AsaasPhp\Environment;
 use HenriqueAmrl\AsaasPhp\Http\HttpClient;
 use Psr\Http\Client\ClientInterface;
 
