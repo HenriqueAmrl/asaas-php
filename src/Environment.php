@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace HenriqueAmrl\AsaasPhp;
 
-enum Environment: string
+enum Environment
 {
-    case Sandbox = 'sandbox';
-    case Production = 'production';
+    case Sandbox;
+    case Production;
 
     public function baseUrl(): string
     {
