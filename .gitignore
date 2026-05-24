@@ -1,0 +1,11 @@
+/vendor/
+/coverage/
+.env
+.phpunit.result.cache
+.phpunit.cache/
+composer.lock
+.planning/
+CLAUDE.md
+.claude/
+.agents/
+skills-lock.json
