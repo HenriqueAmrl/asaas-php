@@ -72,7 +72,6 @@ final class HttpClient
         };
 
         $stack = new HandlerStack(Utils::chooseHandler());
-        $stack->push(Middleware::redirect(), 'allow_redirects');
         $stack->push(Middleware::prepareBody(), 'prepare_body');
         $stack->push(Middleware::retry($decider, RetryMiddleware::exponentialDelay(...)), 'retry');
         // httpErrors intentionally excluded - handleResponse() maps status codes manually
