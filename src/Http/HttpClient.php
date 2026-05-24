@@ -12,6 +12,7 @@ use GuzzleHttp\RetryMiddleware;
 use GuzzleHttp\Utils;
 use HenriqueAmrl\AsaasPhp\Exception\AsaasException;
 use HenriqueAmrl\AsaasPhp\Exception\AuthenticationException;
+use HenriqueAmrl\AsaasPhp\Exception\AuthorizationException;
 use HenriqueAmrl\AsaasPhp\Exception\NetworkException;
 use HenriqueAmrl\AsaasPhp\Exception\NotFoundException;
 use HenriqueAmrl\AsaasPhp\Exception\RateLimitException;
@@ -179,6 +180,7 @@ final class HttpClient
         return match (true) {
             $status === 400 => new ValidationException($firstMessage, $errors, $status),
             $status === 401 => new AuthenticationException($firstMessage, $status),
+            $status === 403 => new AuthorizationException($firstMessage, $status),
             $status === 404 => new NotFoundException($firstMessage, $status),
             $status === 429 => new RateLimitException($firstMessage, $status),
             $status >= 500  => new ServerException($firstMessage, $status),
