@@ -8,6 +8,7 @@ use HenriqueAmrl\AsaasPhp\AsaasClient;
 use HenriqueAmrl\AsaasPhp\Environment;
 use HenriqueAmrl\AsaasPhp\Http\HttpClient;
 use HenriqueAmrl\AsaasPhp\Resource\AbstractResource;
+use HenriqueAmrl\AsaasPhp\Resource\CustomerResource;
 use HenriqueAmrl\AsaasPhp\Tests\Unit\Support\FakeHttpClient;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +32,7 @@ final class AsaasClientTest extends TestCase
     }
 
     #[Test]
-    public function accepts_injected_psr18_client_at_construction(): void
+    public function http_client_uses_injected_psr18_client_for_requests(): void
     {
         $fake = FakeHttpClient::withJsonResponse(200, ['foo' => 'bar']);
         $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
@@ -48,6 +49,7 @@ final class AsaasClientTest extends TestCase
         $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
 
         $resource = new class ($httpClient) extends AbstractResource {
+            /** @return array<string, mixed> */
             public function callGet(string $path): array
             {
                 return $this->httpClient->get($path);
@@ -57,5 +59,21 @@ final class AsaasClientTest extends TestCase
         $result = $resource->callGet('/customers');
 
         $this->assertSame(['id' => 'cus_123'], $result);
+    }
+
+    #[Test]
+    public function customers_returns_customer_resource_instance(): void
+    {
+        $client = new AsaasClient(apiKey: 'test_key');
+
+        $this->assertInstanceOf(CustomerResource::class, $client->customers());
+    }
+
+    #[Test]
+    public function customers_returns_same_instance_on_repeated_calls(): void
+    {
+        $client = new AsaasClient(apiKey: 'test_key');
+
+        $this->assertSame($client->customers(), $client->customers());
     }
 }
