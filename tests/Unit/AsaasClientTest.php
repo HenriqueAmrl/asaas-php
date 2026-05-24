@@ -50,7 +50,7 @@ final class AsaasClientTest extends TestCase
         $resource = new class ($httpClient) extends AbstractResource {
             public function callGet(string $path): array
             {
-                return $this->get($path);
+                return $this->httpClient->get($path);
             }
         };
 
