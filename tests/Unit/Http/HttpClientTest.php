@@ -33,12 +33,10 @@ final class HttpClientTest extends TestCase
     }
 
     #[Test]
-    public function get_request_with_429_response_retries_up_to_three_times(): void
+    public function get_429_with_injected_client_throws_rate_limit_exception_immediately(): void
     {
-        // When using an injected FakeHttpClient (bypasses retry middleware),
-        // a 429 is mapped directly to RateLimitException without retry.
-        // The retry behavior itself is part of the default Guzzle path (HandlerStack),
-        // which is not exercised in unit tests via FakeHttpClient.
+        // Injected FakeHttpClient bypasses the retry middleware - 429 throws immediately.
+        // Retry middleware behavior is exercised separately via the default Guzzle stack.
         $fakeClient = FakeHttpClient::withJsonResponse(429, ['errors' => []]);
         $client = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fakeClient);
 
