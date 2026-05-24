@@ -20,6 +20,7 @@
         "guzzlehttp/psr7": "^2.0"
     },
     "require-dev": {
+        "phpro/grumphp": "^2.16.0",
         "phpunit/phpunit": "^11.0",
         "mockery/mockery": "^1.6",
         "laravel/pint": "^1.0",
@@ -42,12 +43,19 @@
         "test": "vendor/bin/phpunit",
         "analyse": "vendor/bin/phpstan analyse",
         "format": "vendor/bin/pint",
+        "format:check": "vendor/bin/pint --test",
         "rector": "vendor/bin/rector process"
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "phpro/grumphp": true
+        }
+    },
+    "extra": {
+        "grumphp": {
+            "config-default-path": "grumphp.yml"
         }
     }
 }

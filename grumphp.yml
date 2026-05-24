@@ -1,0 +1,33 @@
+grumphp:
+    tasks:
+        composer_script_analyse:
+            metadata:
+                task: composer_script
+                label: 'PHPStan'
+            script: analyse
+            triggered_by: [php]
+        composer_script_format:
+            metadata:
+                task: composer_script
+                label: 'Pint (code style)'
+            script: format:check
+            triggered_by: [php]
+        git_commit_message:
+            allow_empty_message: false
+            enforce_capitalized_subject: false
+            enforce_no_subject_trailing_period: false
+            enforce_single_lined_subject: true
+            skip_on_merge_commit: true
+            max_body_width: 120
+            max_subject_width: 100
+            type_scope_conventions:
+                types:
+                    - feat
+                    - fix
+                    - refactor
+                    - perf
+                    - docs
+                    - test
+                    - chore
+                    - ci
+                    - build
