@@ -100,7 +100,7 @@ final class HttpClientTest extends TestCase
     #[Test]
     public function injected_client_429_without_retry_throws_rate_limit_exception(): void
     {
-        // Injected client bypasses retry middleware — 429 throws immediately
+        // Injected client bypasses retry middleware - 429 throws immediately
         $fakeClient = FakeHttpClient::withJsonResponse(429, ['errors' => [['code' => 'rate_limit', 'description' => 'Too many requests']]]);
         $client = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fakeClient);
 

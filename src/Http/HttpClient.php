@@ -59,7 +59,7 @@ final class HttpClient
         $stack->push(Middleware::redirect(), 'allow_redirects');
         $stack->push(Middleware::prepareBody(), 'prepare_body');
         $stack->push(Middleware::retry($decider, RetryMiddleware::exponentialDelay(...)), 'retry');
-        // httpErrors intentionally excluded — handleResponse() maps status codes manually
+        // httpErrors intentionally excluded - handleResponse() maps status codes manually
 
         return new GuzzleClient(['handler' => $stack]);
     }

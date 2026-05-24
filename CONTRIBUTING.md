@@ -35,6 +35,6 @@ composer format     # fix code style
 
 ## Branches
 
-- `main` — stable, released code
-- `feat/*` — new features
-- `fix/*` — bug fixes
+- `main` - stable, released code
+- `feat/*` - new features
+- `fix/*` - bug fixes
