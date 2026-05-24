@@ -18,21 +18,29 @@ use HenriqueAmrl\AsaasPhp\Exception\RateLimitException;
 use HenriqueAmrl\AsaasPhp\Exception\ServerException;
 use HenriqueAmrl\AsaasPhp\Exception\ValidationException;
 use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 final class HttpClient
 {
     private ClientInterface $client;
 
-    private HttpFactory $factory;
+    private RequestFactoryInterface $requestFactory;
+
+    private StreamFactoryInterface $streamFactory;
 
     public function __construct(
         private readonly string $apiKey,
         private readonly string $baseUrl,
         ?ClientInterface $client = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null,
     ) {
-        $this->factory = new HttpFactory();
+        $defaultFactory = new HttpFactory();
+        $this->requestFactory = $requestFactory ?? $defaultFactory;
+        $this->streamFactory = $streamFactory ?? $defaultFactory;
         $this->client = $client ?? $this->buildDefaultGuzzleClient();
     }
 
@@ -67,7 +75,7 @@ final class HttpClient
     /** @return array<string, mixed> */
     public function get(string $path): array
     {
-        $request = $this->factory->createRequest('GET', $this->baseUrl.$path)
+        $request = $this->requestFactory->createRequest('GET', $this->baseUrl.$path)
             ->withHeader('access_token', $this->apiKey)
             ->withHeader('Accept', 'application/json');
 
@@ -80,11 +88,11 @@ final class HttpClient
      */
     public function post(string $path, array $body = []): array
     {
-        $request = $this->factory->createRequest('POST', $this->baseUrl.$path)
+        $request = $this->requestFactory->createRequest('POST', $this->baseUrl.$path)
             ->withHeader('access_token', $this->apiKey)
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Accept', 'application/json')
-            ->withBody($this->factory->createStream(
+            ->withBody($this->streamFactory->createStream(
                 json_encode($body, JSON_THROW_ON_ERROR)
             ));
 
@@ -97,11 +105,11 @@ final class HttpClient
      */
     public function put(string $path, array $body = []): array
     {
-        $request = $this->factory->createRequest('PUT', $this->baseUrl.$path)
+        $request = $this->requestFactory->createRequest('PUT', $this->baseUrl.$path)
             ->withHeader('access_token', $this->apiKey)
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Accept', 'application/json')
-            ->withBody($this->factory->createStream(
+            ->withBody($this->streamFactory->createStream(
                 json_encode($body, JSON_THROW_ON_ERROR)
             ));
 
@@ -111,7 +119,7 @@ final class HttpClient
     /** @return array<string, mixed> */
     public function delete(string $path): array
     {
-        $request = $this->factory->createRequest('DELETE', $this->baseUrl.$path)
+        $request = $this->requestFactory->createRequest('DELETE', $this->baseUrl.$path)
             ->withHeader('access_token', $this->apiKey)
             ->withHeader('Accept', 'application/json');
 
