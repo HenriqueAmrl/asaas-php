@@ -57,8 +57,15 @@ final class HttpClient
                 return false;
             }
 
-            if ($response !== null && $response->getStatusCode() === 429) {
-                return in_array(strtoupper($request->getMethod()), ['GET', 'DELETE'], true);
+            $isIdempotent = in_array(strtoupper($request->getMethod()), ['GET', 'DELETE'], true);
+            if (!$isIdempotent) {
+                return false;
+            }
+
+            if ($response !== null) {
+                $status = $response->getStatusCode();
+
+                return $status === 429 || in_array($status, [502, 503, 504], true);
             }
 
             return false;
