@@ -280,4 +280,93 @@ final class ChargeResourceTest extends TestCase
         $this->assertInstanceOf(Charge::class, $charge);
         $this->assertSame(BillingType::Pix, $charge->billingType);
     }
+
+    #[Test]
+    public function cancel_returns_void_on_success_response(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'deleted' => true,
+            'id' => 'pay_123',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->cancel('pay_123');
+
+        $this->addToAssertionCount(1);
+    }
+
+    #[Test]
+    public function cancel_nonexistent_charge_throws_not_found_exception(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(404, [
+            'errors' => [
+                ['code' => 'not_found', 'description' => 'Payment not found'],
+            ],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $this->expectException(NotFoundException::class);
+
+        $resource->cancel('pay_missing');
+    }
+
+    #[Test]
+    public function refund_with_no_arguments_returns_void_full_refund(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_123',
+            'status' => 'REFUNDED',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->refund('pay_123');
+
+        $this->addToAssertionCount(1);
+    }
+
+    #[Test]
+    public function refund_with_value_returns_void_partial_refund(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_123',
+            'status' => 'REFUND_REQUESTED',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->refund('pay_123', value: 50.0);
+
+        $this->addToAssertionCount(1);
+    }
+
+    #[Test]
+    public function refund_with_value_and_description_returns_void(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_123',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->refund('pay_123', value: 50.0, description: 'goodwill partial');
+
+        $this->addToAssertionCount(1);
+    }
+
+    #[Test]
+    public function refund_with_description_only_returns_void(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_123',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->refund('pay_123', description: 'goodwill full');
+
+        $this->addToAssertionCount(1);
+    }
 }
