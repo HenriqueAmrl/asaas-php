@@ -26,16 +26,22 @@ final class ChargeResourceIntegrationTest extends TestCase
 
     private string $customerId = '';
 
+    private string $cpf = '';
+
     /** @var list<string> */
     private array $createdChargeIds = [];
 
     protected function setUp(): void
     {
         $apiKey = (string) (getenv('ASAAS_API_KEY') ?: ($_ENV['ASAAS_API_KEY'] ?? ''));
-        $cpf = (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735'));
+        $this->cpf = (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? ''));
 
-        if ($apiKey === '' || $apiKey === 'test_key') {
+        if ($apiKey === '') {
             $this->markTestSkipped('Integration tests require real ASAAS_API_KEY env var.');
+        }
+
+        if ($this->cpf === '') {
+            $this->markTestSkipped('Integration tests require ASAAS_TEST_CPF env var.');
         }
 
         $client = new AsaasClient($apiKey, Environment::Sandbox);
@@ -45,7 +51,7 @@ final class ChargeResourceIntegrationTest extends TestCase
         // Create a reusable customer for charge tests
         $customer = $this->customers->create([
             'name' => 'Charge Integration Test Customer',
-            'cpfCnpj' => $cpf,
+            'cpfCnpj' => $this->cpf,
         ]);
         $this->customerId = $customer->id;
     }
@@ -182,7 +188,7 @@ final class ChargeResourceIntegrationTest extends TestCase
             'creditCardHolderInfo' => [
                 'name' => 'Integration Test',
                 'email' => 'integration-test@example.com',
-                'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
+                'cpfCnpj' => $this->cpf,
                 'postalCode' => '89223-005',
                 'addressNumber' => '277',
                 'phone' => '47999999999',
