@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace HenriqueAmrl\AsaasPhp\Tests\Integration;
 
+use HenriqueAmrl\AsaasPhp\AsaasClient;
 use HenriqueAmrl\AsaasPhp\Dto\BoletoIdentificationField;
 use HenriqueAmrl\AsaasPhp\Dto\Charge;
 use HenriqueAmrl\AsaasPhp\Dto\PageResult;
 use HenriqueAmrl\AsaasPhp\Dto\PixQrCode;
 use HenriqueAmrl\AsaasPhp\Enum\BillingType;
 use HenriqueAmrl\AsaasPhp\Enum\ChargeStatus;
+use HenriqueAmrl\AsaasPhp\Environment;
 use HenriqueAmrl\AsaasPhp\Exception\NotFoundException;
-use HenriqueAmrl\AsaasPhp\Http\HttpClient;
 use HenriqueAmrl\AsaasPhp\Resource\ChargeResource;
 use HenriqueAmrl\AsaasPhp\Resource\CustomerResource;
 use PHPUnit\Framework\Attributes\Test;
@@ -30,17 +31,16 @@ final class ChargeResourceIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $apiKey = (string) (getenv('ASAAS_API_KEY') ?: '');
-        $baseUrl = (string) (getenv('ASAAS_BASE_URL') ?: 'https://api-sandbox.asaas.com/v3');
-        $cpf = (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735');
+        $apiKey = (string) (getenv('ASAAS_API_KEY') ?: ($_ENV['ASAAS_API_KEY'] ?? ''));
+        $cpf = (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735'));
 
         if ($apiKey === '' || $apiKey === 'test_key') {
             $this->markTestSkipped('Integration tests require real ASAAS_API_KEY env var.');
         }
 
-        $http = new HttpClient($apiKey, $baseUrl);
-        $this->charges = new ChargeResource($http);
-        $this->customers = new CustomerResource($http);
+        $client = new AsaasClient($apiKey, Environment::Sandbox);
+        $this->charges = $client->charges();
+        $this->customers = $client->customers();
 
         // Create a reusable customer for charge tests
         $customer = $this->customers->create([
@@ -182,7 +182,7 @@ final class ChargeResourceIntegrationTest extends TestCase
             'creditCardHolderInfo' => [
                 'name' => 'Integration Test',
                 'email' => 'integration-test@example.com',
-                'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735'),
+                'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
                 'postalCode' => '89223-005',
                 'addressNumber' => '277',
                 'phone' => '47999999999',

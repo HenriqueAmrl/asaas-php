@@ -2,7 +2,14 @@
     "name": "henriqueamrl/asaas-php",
     "description": "PHP SDK for the Asaas payment gateway API (v3) - customers, charges, subscriptions, PIX, and webhooks.",
     "type": "library",
-    "keywords": ["asaas", "payment", "sdk", "pix", "boleto", "php"],
+    "keywords": [
+        "asaas",
+        "payment",
+        "sdk",
+        "pix",
+        "boleto",
+        "php"
+    ],
     "homepage": "https://github.com/henriqueamrl/asaas-php",
     "license": "MIT",
     "authors": [
@@ -44,7 +51,8 @@
         "analyse": "vendor/bin/phpstan analyse",
         "format": "vendor/bin/pint",
         "format:check": "vendor/bin/pint --test",
-        "rector": "vendor/bin/rector process"
+        "rector": "vendor/bin/rector process",
+        "test:integration": "vendor/bin/phpunit -c phpunit.integration.xml"
     },
     "config": {
         "sort-packages": true,

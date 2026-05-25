@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace HenriqueAmrl\AsaasPhp\Tests\Integration;
 
+use HenriqueAmrl\AsaasPhp\AsaasClient;
 use HenriqueAmrl\AsaasPhp\Dto\Customer;
 use HenriqueAmrl\AsaasPhp\Dto\PageResult;
+use HenriqueAmrl\AsaasPhp\Environment;
 use HenriqueAmrl\AsaasPhp\Exception\NotFoundException;
-use HenriqueAmrl\AsaasPhp\Http\HttpClient;
 use HenriqueAmrl\AsaasPhp\Resource\CustomerResource;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -21,14 +22,14 @@ final class CustomerResourceIntegrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $apiKey = (string) (getenv('ASAAS_API_KEY') ?: '');
-        $baseUrl = (string) (getenv('ASAAS_BASE_URL') ?: 'https://api-sandbox.asaas.com/v3');
+        $apiKey = (string) (getenv('ASAAS_API_KEY') ?: ($_ENV['ASAAS_API_KEY'] ?? ''));
 
         if ($apiKey === '' || $apiKey === 'test_key') {
             $this->markTestSkipped('Integration tests require real ASAAS_API_KEY env var.');
         }
 
-        $this->customers = new CustomerResource(new HttpClient($apiKey, $baseUrl));
+        $client = new AsaasClient($apiKey, Environment::Sandbox);
+        $this->customers = $client->customers();
     }
 
     protected function tearDown(): void
@@ -47,7 +48,7 @@ final class CustomerResourceIntegrationTest extends TestCase
     {
         $customer = $this->customers->create([
             'name' => 'Integration Test Customer',
-            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735'),
+            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
             'email' => 'integration-test@example.com',
         ]);
 
@@ -64,7 +65,7 @@ final class CustomerResourceIntegrationTest extends TestCase
     {
         $created = $this->customers->create([
             'name' => 'Find Test Customer',
-            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735'),
+            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
         ]);
         $this->createdIds[] = $created->id;
 
@@ -79,7 +80,7 @@ final class CustomerResourceIntegrationTest extends TestCase
     {
         $created = $this->customers->create([
             'name' => 'Before Update',
-            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735'),
+            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
         ]);
         $this->createdIds[] = $created->id;
 
@@ -94,7 +95,7 @@ final class CustomerResourceIntegrationTest extends TestCase
     {
         $created = $this->customers->create([
             'name' => 'Delete Test Customer',
-            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735'),
+            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
         ]);
 
         $this->customers->delete($created->id);
@@ -131,7 +132,7 @@ final class CustomerResourceIntegrationTest extends TestCase
         $unique = 'IntgTest-' . substr(md5((string) microtime(true)), 0, 8);
         $created = $this->customers->create([
             'name' => $unique,
-            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: '11144477735'),
+            'cpfCnpj' => (string) (getenv('ASAAS_TEST_CPF') ?: ($_ENV['ASAAS_TEST_CPF'] ?? '11144477735')),
         ]);
         $this->createdIds[] = $created->id;
 
