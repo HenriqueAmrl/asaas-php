@@ -6,6 +6,7 @@ namespace HenriqueAmrl\AsaasPhp\Resource;
 
 use HenriqueAmrl\AsaasPhp\Dto\BoletoIdentificationField;
 use HenriqueAmrl\AsaasPhp\Dto\Charge;
+use HenriqueAmrl\AsaasPhp\Dto\PageResult;
 use HenriqueAmrl\AsaasPhp\Dto\PixQrCode;
 use HenriqueAmrl\AsaasPhp\Enum\BillingType;
 
@@ -97,5 +98,30 @@ final class ChargeResource extends AbstractResource
         ], static fn (mixed $v): bool => $v !== null);
 
         $this->httpClient->post('/payments/' . $id . '/refund', $body);
+    }
+
+    /**
+     * @param array<string, string|int|bool> $filters
+     * @return PageResult<Charge>
+     * @see https://docs.asaas.com/reference/list-payments
+     */
+    public function list(array $filters = [], int $offset = 0, int $limit = 10): PageResult
+    {
+        $params = array_merge($filters, ['offset' => $offset, 'limit' => $limit]);
+        $response = $this->httpClient->get('/payments?' . http_build_query($params));
+
+        /** @var array<int, array<string, mixed>> $rawItems */
+        $rawItems = $response['data'] ?? [];
+
+        return new PageResult(
+            totalCount: (int) ($response['totalCount'] ?? 0),
+            hasMore: (bool) ($response['hasMore'] ?? false),
+            limit: (int) ($response['limit'] ?? $limit),
+            offset: (int) ($response['offset'] ?? $offset),
+            data: array_map(
+                static fn (array $item): Charge => Charge::fromArray($item),
+                $rawItems,
+            ),
+        );
     }
 }
