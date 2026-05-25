@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HenriqueAmrl\AsaasPhp;
 
 use HenriqueAmrl\AsaasPhp\Http\HttpClient;
+use HenriqueAmrl\AsaasPhp\Resource\ChargeResource;
 use HenriqueAmrl\AsaasPhp\Resource\CustomerResource;
 
 final class AsaasClient
@@ -12,6 +13,8 @@ final class AsaasClient
     private readonly HttpClient $httpClient;
 
     private ?CustomerResource $customers = null;
+
+    private ?ChargeResource $charges = null;
 
     public function __construct(
         string $apiKey,
@@ -26,5 +29,10 @@ final class AsaasClient
     public function customers(): CustomerResource
     {
         return $this->customers ??= new CustomerResource($this->httpClient);
+    }
+
+    public function charges(): ChargeResource
+    {
+        return $this->charges ??= new ChargeResource($this->httpClient);
     }
 }

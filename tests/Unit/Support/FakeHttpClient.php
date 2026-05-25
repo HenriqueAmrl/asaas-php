@@ -14,6 +14,8 @@ final class FakeHttpClient implements ClientInterface
     /** @var array<int, ResponseInterface> */
     private array $responses;
 
+    private ?RequestInterface $lastRequest = null;
+
     /** @param array<int, ResponseInterface> $responses */
     public function __construct(array $responses = [])
     {
@@ -26,7 +28,29 @@ final class FakeHttpClient implements ClientInterface
             throw new \RuntimeException('FakeHttpClient: no more responses queued');
         }
 
+        $this->lastRequest = $request;
+
         return array_shift($this->responses);
+    }
+
+    public function getLastRequest(): RequestInterface
+    {
+        if ($this->lastRequest === null) {
+            throw new \RuntimeException('FakeHttpClient: no request has been sent yet');
+        }
+
+        return $this->lastRequest;
+    }
+
+    /** @return array<string, mixed> */
+    public function getLastRequestBody(): array
+    {
+        $body = (string) $this->getLastRequest()->getBody();
+
+        /** @var array<string, mixed> $decoded */
+        $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
     }
 
     /** @param array<string, mixed> $body */
