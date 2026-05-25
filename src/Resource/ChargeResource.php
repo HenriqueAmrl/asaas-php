@@ -108,7 +108,9 @@ final class ChargeResource extends AbstractResource
     public function list(array $filters = [], int $offset = 0, int $limit = 10): PageResult
     {
         $params = array_merge($filters, ['offset' => $offset, 'limit' => $limit]);
-        $response = $this->httpClient->get('/payments?' . http_build_query($params));
+        $qs = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+        $qs = str_replace(['%5B', '%5D'], ['[', ']'], $qs);
+        $response = $this->httpClient->get('/payments?' . $qs);
 
         /** @var array<int, array<string, mixed>> $rawItems */
         $rawItems = $response['data'] ?? [];
