@@ -258,7 +258,7 @@ final class ChargeResourceTest extends TestCase
     }
 
     #[Test]
-    public function createPix_overrides_caller_supplied_billing_type(): void
+    public function createPix_injects_pix_billing_type_into_outbound_request_body(): void
     {
         $fake = FakeHttpClient::withJsonResponse(200, [
             'id' => 'pay_x',
@@ -271,15 +271,15 @@ final class ChargeResourceTest extends TestCase
         $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
         $resource = new ChargeResource($httpClient);
 
-        $charge = $resource->createPix([
+        $resource->createPix([
             'customer' => 'cus_x',
             'value' => 10.0,
             'dueDate' => '2026-08-01',
             'billingType' => 'BOLETO',
         ]);
 
-        $this->assertInstanceOf(Charge::class, $charge);
-        $this->assertSame(BillingType::Pix, $charge->billingType);
+        $requestBody = $fake->getLastRequestBody();
+        $this->assertSame('PIX', $requestBody['billingType']);
     }
 
     #[Test]
@@ -506,5 +506,63 @@ final class ChargeResourceTest extends TestCase
         $this->assertSame(5, $result->limit);
         $this->assertSame(10, $result->offset);
         $this->assertTrue($result->hasMore);
+    }
+
+    #[Test]
+    public function list_with_bracket_filter_keys_includes_filter_keys_in_url(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'totalCount' => 0,
+            'hasMore' => false,
+            'limit' => 10,
+            'offset' => 0,
+            'data' => [],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->list(['dueDate[ge]' => '2026-01-01', 'dueDate[le]' => '2026-12-31']);
+
+        // Decode the URI to compare filter keys regardless of bracket encoding by PSR-7
+        $rawUri = urldecode((string) $fake->getLastRequest()->getUri());
+        $this->assertStringContainsString('dueDate[ge]=2026-01-01', $rawUri);
+        $this->assertStringContainsString('dueDate[le]=2026-12-31', $rawUri);
+    }
+
+    #[Test]
+    public function cancel_sends_delete_request_to_correct_path(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'deleted' => true,
+            'id' => 'pay_777',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->cancel('pay_777');
+
+        $request = $fake->getLastRequest();
+        $this->assertSame('DELETE', $request->getMethod());
+        $this->assertStringEndsWith('/payments/pay_777', (string) $request->getUri());
+    }
+
+    #[Test]
+    public function refund_sends_post_to_refund_path(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_888',
+            'status' => 'REFUNDED',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $resource->refund('pay_888', value: 30.0, description: 'test refund');
+
+        $request = $fake->getLastRequest();
+        $this->assertSame('POST', $request->getMethod());
+        $this->assertStringEndsWith('/payments/pay_888/refund', (string) $request->getUri());
+        $requestBody = $fake->getLastRequestBody();
+        $this->assertSame(30, (int) $requestBody['value']);
+        $this->assertSame('test refund', $requestBody['description']);
     }
 }
