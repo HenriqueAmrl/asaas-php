@@ -7,6 +7,7 @@ namespace HenriqueAmrl\AsaasPhp\Tests\Unit\Resource;
 use HenriqueAmrl\AsaasPhp\AsaasClient;
 use HenriqueAmrl\AsaasPhp\Dto\BoletoIdentificationField;
 use HenriqueAmrl\AsaasPhp\Dto\Charge;
+use HenriqueAmrl\AsaasPhp\Dto\PageResult;
 use HenriqueAmrl\AsaasPhp\Dto\PixQrCode;
 use HenriqueAmrl\AsaasPhp\Enum\BillingType;
 use HenriqueAmrl\AsaasPhp\Enum\ChargeStatus;
@@ -368,5 +369,142 @@ final class ChargeResourceTest extends TestCase
         $resource->refund('pay_123', description: 'goodwill full');
 
         $this->addToAssertionCount(1);
+    }
+
+    #[Test]
+    public function list_returns_page_result_of_charge_dtos(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'totalCount' => 2,
+            'hasMore' => false,
+            'limit' => 10,
+            'offset' => 0,
+            'data' => [
+                [
+                    'id' => 'pay_1',
+                    'customer' => 'cus_a',
+                    'billingType' => 'BOLETO',
+                    'status' => 'PENDING',
+                    'value' => 100.0,
+                    'dueDate' => '2026-06-01',
+                ],
+                [
+                    'id' => 'pay_2',
+                    'customer' => 'cus_b',
+                    'billingType' => 'PIX',
+                    'status' => 'CONFIRMED',
+                    'value' => 50.0,
+                    'dueDate' => '2026-06-15',
+                ],
+            ],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $result = $resource->list();
+
+        $this->assertInstanceOf(PageResult::class, $result);
+        $this->assertSame(2, $result->totalCount);
+        $this->assertFalse($result->hasMore);
+        $this->assertCount(2, $result->data);
+        $this->assertInstanceOf(Charge::class, $result->data[0]);
+        $this->assertSame('pay_1', $result->data[0]->id);
+        $this->assertSame(BillingType::Pix, $result->data[1]->billingType);
+    }
+
+    #[Test]
+    public function list_with_customer_and_status_filters_returns_filtered_page_result(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'totalCount' => 1,
+            'hasMore' => false,
+            'limit' => 10,
+            'offset' => 0,
+            'data' => [
+                [
+                    'id' => 'pay_3',
+                    'customer' => 'cus_a',
+                    'billingType' => 'BOLETO',
+                    'status' => 'PENDING',
+                    'value' => 75.0,
+                    'dueDate' => '2026-07-01',
+                ],
+            ],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $result = $resource->list(['customer' => 'cus_a', 'status' => 'PENDING']);
+
+        $this->assertSame(1, $result->totalCount);
+        $this->assertSame('cus_a', $result->data[0]->customer);
+        $this->assertSame(ChargeStatus::Pending, $result->data[0]->status);
+    }
+
+    #[Test]
+    public function list_with_due_date_range_filters_returns_typed_page_result(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'totalCount' => 1,
+            'hasMore' => false,
+            'limit' => 10,
+            'offset' => 0,
+            'data' => [
+                [
+                    'id' => 'pay_4',
+                    'customer' => 'cus_b',
+                    'billingType' => 'PIX',
+                    'status' => 'PENDING',
+                    'value' => 200.0,
+                    'dueDate' => '2026-06-15',
+                ],
+            ],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $result = $resource->list(['dueDate[ge]' => '2026-01-01', 'dueDate[le]' => '2026-12-31']);
+
+        $this->assertInstanceOf(PageResult::class, $result);
+        $this->assertSame(1, $result->totalCount);
+    }
+
+    #[Test]
+    public function list_with_empty_response_returns_empty_page_result(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'totalCount' => 0,
+            'hasMore' => false,
+            'limit' => 10,
+            'offset' => 0,
+            'data' => [],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $result = $resource->list();
+
+        $this->assertSame(0, $result->totalCount);
+        $this->assertSame([], $result->data);
+    }
+
+    #[Test]
+    public function list_with_custom_offset_and_limit_passes_them_through(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'totalCount' => 15,
+            'hasMore' => true,
+            'limit' => 5,
+            'offset' => 10,
+            'data' => [],
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $result = $resource->list([], 10, 5);
+
+        $this->assertSame(5, $result->limit);
+        $this->assertSame(10, $result->offset);
+        $this->assertTrue($result->hasMore);
     }
 }
