@@ -7,6 +7,7 @@ namespace HenriqueAmrl\AsaasPhp\Tests\Unit\Resource;
 use HenriqueAmrl\AsaasPhp\AsaasClient;
 use HenriqueAmrl\AsaasPhp\Dto\BoletoIdentificationField;
 use HenriqueAmrl\AsaasPhp\Dto\Charge;
+use HenriqueAmrl\AsaasPhp\Dto\PixQrCode;
 use HenriqueAmrl\AsaasPhp\Enum\BillingType;
 use HenriqueAmrl\AsaasPhp\Enum\ChargeStatus;
 use HenriqueAmrl\AsaasPhp\Exception\NotFoundException;
@@ -136,5 +137,147 @@ final class ChargeResourceTest extends TestCase
 
         $this->assertInstanceOf(ChargeResource::class, $first);
         $this->assertSame($first, $second);
+    }
+
+    #[Test]
+    public function createPix_returns_typed_charge_dto_with_pix_billing_type(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_456',
+            'customer' => 'cus_2',
+            'billingType' => 'PIX',
+            'status' => 'PENDING',
+            'value' => 50.0,
+            'dueDate' => '2026-06-15',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $charge = $resource->createPix([
+            'customer' => 'cus_2',
+            'value' => 50.0,
+            'dueDate' => '2026-06-15',
+        ]);
+
+        $this->assertInstanceOf(Charge::class, $charge);
+        $this->assertSame(BillingType::Pix, $charge->billingType);
+        $this->assertSame(ChargeStatus::Pending, $charge->status);
+        $this->assertSame(50.0, $charge->value);
+    }
+
+    #[Test]
+    public function pixQrCode_returns_typed_pix_qr_code_dto(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'encodedImage' => 'iVBORw0KGgo',
+            'payload' => '00020126580014BR.GOV.BCB.PIX',
+            'expirationDate' => '2027-06-15',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $qrCode = $resource->pixQrCode('pay_456');
+
+        $this->assertInstanceOf(PixQrCode::class, $qrCode);
+        $this->assertSame('iVBORw0KGgo', $qrCode->encodedImage);
+        $this->assertSame('00020126580014BR.GOV.BCB.PIX', $qrCode->payload);
+        $this->assertSame('2027-06-15', $qrCode->expirationDate);
+    }
+
+    #[Test]
+    public function createCreditCard_with_inline_card_payload_returns_typed_charge_with_token(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_789',
+            'customer' => 'cus_3',
+            'billingType' => 'CREDIT_CARD',
+            'status' => 'CONFIRMED',
+            'value' => 200.0,
+            'dueDate' => '2026-06-20',
+            'creditCardToken' => 'tok_abc123',
+            'creditCardNumber' => '1234',
+            'creditCardBrand' => 'VISA',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $charge = $resource->createCreditCard([
+            'customer' => 'cus_3',
+            'value' => 200.0,
+            'dueDate' => '2026-06-20',
+            'creditCard' => [
+                'holderName' => 'Maria Silva',
+                'number' => '5162306219378829',
+                'expiryMonth' => '05',
+                'expiryYear' => '2028',
+                'ccv' => '318',
+            ],
+            'creditCardHolderInfo' => [
+                'name' => 'Maria Silva',
+                'email' => 'maria@example.com',
+                'cpfCnpj' => '24971563792',
+                'postalCode' => '89223-005',
+                'addressNumber' => '277',
+            ],
+            'remoteIp' => '203.0.113.42',
+        ]);
+
+        $this->assertInstanceOf(Charge::class, $charge);
+        $this->assertSame(BillingType::CreditCard, $charge->billingType);
+        $this->assertSame(ChargeStatus::Confirmed, $charge->status);
+        $this->assertSame('tok_abc123', $charge->creditCardToken);
+        $this->assertSame('VISA', $charge->creditCardBrand);
+    }
+
+    #[Test]
+    public function createCreditCard_with_token_only_payload_returns_typed_charge(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_999',
+            'customer' => 'cus_4',
+            'billingType' => 'CREDIT_CARD',
+            'status' => 'CONFIRMED',
+            'value' => 75.0,
+            'dueDate' => '2026-07-01',
+            'creditCardToken' => 'tok_abc123',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $charge = $resource->createCreditCard([
+            'customer' => 'cus_4',
+            'value' => 75.0,
+            'dueDate' => '2026-07-01',
+            'creditCardToken' => 'tok_abc123',
+        ]);
+
+        $this->assertInstanceOf(Charge::class, $charge);
+        $this->assertSame(BillingType::CreditCard, $charge->billingType);
+        $this->assertSame('tok_abc123', $charge->creditCardToken);
+    }
+
+    #[Test]
+    public function createPix_overrides_caller_supplied_billing_type(): void
+    {
+        $fake = FakeHttpClient::withJsonResponse(200, [
+            'id' => 'pay_x',
+            'customer' => 'cus_x',
+            'billingType' => 'PIX',
+            'status' => 'PENDING',
+            'value' => 10.0,
+            'dueDate' => '2026-08-01',
+        ]);
+        $httpClient = new HttpClient('test_key', 'https://api-sandbox.asaas.com/v3', $fake);
+        $resource = new ChargeResource($httpClient);
+
+        $charge = $resource->createPix([
+            'customer' => 'cus_x',
+            'value' => 10.0,
+            'dueDate' => '2026-08-01',
+            'billingType' => 'BOLETO',
+        ]);
+
+        $this->assertInstanceOf(Charge::class, $charge);
+        $this->assertSame(BillingType::Pix, $charge->billingType);
     }
 }

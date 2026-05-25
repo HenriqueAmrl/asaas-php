@@ -6,6 +6,7 @@ namespace HenriqueAmrl\AsaasPhp\Resource;
 
 use HenriqueAmrl\AsaasPhp\Dto\BoletoIdentificationField;
 use HenriqueAmrl\AsaasPhp\Dto\Charge;
+use HenriqueAmrl\AsaasPhp\Dto\PixQrCode;
 use HenriqueAmrl\AsaasPhp\Enum\BillingType;
 
 final class ChargeResource extends AbstractResource
@@ -39,5 +40,39 @@ final class ChargeResource extends AbstractResource
         $response = $this->httpClient->get('/payments/' . $id . '/identificationField');
 
         return BoletoIdentificationField::fromArray($response);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @see https://docs.asaas.com/docs/payments-via-pix-or-dynamic-qr-code
+     */
+    public function createPix(array $data): Charge
+    {
+        $response = $this->httpClient->post('/payments', array_merge($data, ['billingType' => BillingType::Pix->value]));
+
+        return Charge::fromArray($response);
+    }
+
+    /**
+     * @see https://docs.asaas.com/docs/payments-via-pix-or-dynamic-qr-code
+     */
+    public function pixQrCode(string $id): PixQrCode
+    {
+        $response = $this->httpClient->get('/payments/' . $id . '/pixQrCode');
+
+        return PixQrCode::fromArray($response);
+    }
+
+    /**
+     * Caller MUST supply either: (a) creditCard + creditCardHolderInfo + remoteIp, OR (b) creditCardToken.
+     *
+     * @param array<string, mixed> $data
+     * @see https://docs.asaas.com/docs/payments-via-credit-card
+     */
+    public function createCreditCard(array $data): Charge
+    {
+        $response = $this->httpClient->post('/payments', array_merge($data, ['billingType' => BillingType::CreditCard->value]));
+
+        return Charge::fromArray($response);
     }
 }
