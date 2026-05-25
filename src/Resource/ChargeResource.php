@@ -75,4 +75,27 @@ final class ChargeResource extends AbstractResource
 
         return Charge::fromArray($response);
     }
+
+    /**
+     * @see https://docs.asaas.com/reference/delete-payment
+     */
+    public function cancel(string $id): void
+    {
+        $this->httpClient->delete('/payments/' . $id);
+    }
+
+    /**
+     * Asaas uses POST (not DELETE) for refunds; POST is never retried by HttpClient.
+     *
+     * @see https://docs.asaas.com/reference/refund-payment
+     */
+    public function refund(string $id, ?float $value = null, ?string $description = null): void
+    {
+        $body = array_filter([
+            'value' => $value,
+            'description' => $description,
+        ], static fn (mixed $v): bool => $v !== null);
+
+        $this->httpClient->post('/payments/' . $id . '/refund', $body);
+    }
 }
