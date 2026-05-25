@@ -34,7 +34,7 @@ final class ChargeResource extends AbstractResource
     }
 
     /**
-     * @see https://docs.asaas.com/docs/cobrancas-via-boleto
+     * @see https://docs.asaas.com/reference/retrieve-payment-identification-field
      */
     public function identificationField(string $id): BoletoIdentificationField
     {
@@ -45,7 +45,7 @@ final class ChargeResource extends AbstractResource
 
     /**
      * @param array<string, mixed> $data
-     * @see https://docs.asaas.com/docs/payments-via-pix-or-dynamic-qr-code
+     * @see https://docs.asaas.com/reference/criar-nova-cobranca
      */
     public function createPix(array $data): Charge
     {
@@ -55,7 +55,7 @@ final class ChargeResource extends AbstractResource
     }
 
     /**
-     * @see https://docs.asaas.com/docs/payments-via-pix-or-dynamic-qr-code
+     * @see https://docs.asaas.com/reference/get-pix-qr-code
      */
     public function pixQrCode(string $id): PixQrCode
     {
